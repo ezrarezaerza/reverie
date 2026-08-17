@@ -1,0 +1,73 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  name              String?
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  
+  entries           Entry[]
+  streak            Streak?
+  pushSubscriptions PushSubscription[]
+
+  @@map("users")
+}
+
+model Entry {
+  id                  String   @id @default(cuid())
+  userId              String   @map("user_id")
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date                DateTime @db.Date
+  title               String
+  body                String   @db.Text
+  timePacing          String?  @map("time_pacing")
+  sensoryCues         String[] @map("sensory_cues")
+  location            String?
+  weather             String?
+  moodStamp           String?  @map("mood_stamp")
+  linkedNoveltyTitle  String?  @map("linked_novelty_title")
+  reflectionPrompt    String?  @map("reflection_prompt")
+  isFavorite          Boolean  @default(false) @map("is_favorite")
+  paperStyle          String   @default("ruled") @map("paper_style")
+  inkColor            String   @default("blue") @map("ink_color")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@index([userId, date])
+  @@map("entries")
+}
+
+model Streak {
+  id            String    @id @default(cuid())
+  userId        String    @unique @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentCount  Int       @default(0) @map("current_count")
+  longestCount  Int       @default(0) @map("longest_count")
+  graceDayUsed  Boolean   @default(false) @map("grace_day_used")
+  lastEntryDate DateTime? @map("last_entry_date")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("streaks")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique @db.Text
+  p256dh    String   @db.Text
+  auth      String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("push_subscriptions")
+}

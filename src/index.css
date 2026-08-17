@@ -1,0 +1,212 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-parchment: #FDFBF7;
+    --bg-desk: #2A302C;
+    --ink-blue: #1C355E;
+    --ink-black: #242220;
+    --ink-sepia: #4A3525;
+    --ink-faded-red: #A8382A;
+    --paper-line: rgba(59, 130, 246, 0.18);
+    --paper-margin: rgba(239, 68, 68, 0.35);
+  }
+
+  :root[data-theme='quiet-dark'], html.dark {
+    --bg-parchment: #1E2320;
+    --bg-desk: #141816;
+    --ink-blue: #93B5E8;
+    --ink-black: #EAE5D9;
+    --ink-sepia: #D2BA9E;
+    --ink-faded-red: #E07A6D;
+    --paper-line: rgba(147, 181, 232, 0.15);
+    --paper-margin: rgba(224, 122, 109, 0.25);
+  }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--ink-black);
+    background-color: #242B28;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(220, 190, 150, 0.08) 0%, transparent 70%),
+      radial-gradient(circle at 90% 80%, rgba(130, 160, 140, 0.05) 0%, transparent 60%);
+  }
+
+  html.dark body {
+    background-color: #121614;
+    background-image: 
+      radial-gradient(circle at 50% 0%, rgba(50, 60, 55, 0.2) 0%, transparent 70%),
+      radial-gradient(circle at 90% 80%, rgba(30, 40, 36, 0.15) 0%, transparent 60%);
+  }
+}
+
+/* Custom font utilities */
+.font-display {
+  font-family: 'Fraunces', Georgia, serif;
+}
+
+.font-hand {
+  font-family: 'Caveat', cursive;
+}
+
+.font-notebook {
+  font-family: 'Kalam', cursive;
+}
+
+.font-casual {
+  font-family: 'Patrick Hand', cursive;
+}
+
+.font-typewriter {
+  font-family: 'Special Elite', monospace;
+}
+
+/* Notebook paper textures & lines */
+.ruled-paper {
+  background-color: #FAF8F2;
+  background-image: 
+    linear-gradient(90deg, transparent 72px, var(--paper-margin) 72px, var(--paper-margin) 74px, transparent 74px),
+    repeating-linear-gradient(transparent, transparent 31px, var(--paper-line) 31px, var(--paper-line) 32px);
+  background-size: 100% 32px;
+  line-height: 32px;
+}
+
+.ruled-paper-compact {
+  background-color: #FAF8F2;
+  background-image: 
+    linear-gradient(90deg, transparent 48px, var(--paper-margin) 48px, var(--paper-margin) 49px, transparent 49px),
+    repeating-linear-gradient(transparent, transparent 25px, var(--paper-line) 25px, var(--paper-line) 26px);
+  background-size: 100% 26px;
+  line-height: 26px;
+}
+
+.grid-paper {
+  background-color: #FDFBF7;
+  background-image: 
+    linear-gradient(to right, rgba(80, 110, 150, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(80, 110, 150, 0.12) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.dot-paper {
+  background-color: #FBF9F4;
+  background-image: radial-gradient(rgba(100, 116, 139, 0.25) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* Tactile Analog Paper Layering & Shadows */
+.paper-shadow {
+  box-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 4px 12px rgba(28, 25, 23, 0.08),
+    0 16px 32px rgba(28, 25, 23, 0.12);
+}
+
+.paper-shadow-lifted {
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.05),
+    0 10px 24px rgba(20, 20, 18, 0.14),
+    0 24px 48px rgba(20, 20, 18, 0.16);
+}
+
+.paper-shadow-subtle {
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    0 3px 8px rgba(0, 0, 0, 0.07);
+}
+
+/* Authentic Washi Tape */
+.washi-tape {
+  position: relative;
+  background-color: rgba(226, 194, 142, 0.85);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  backdrop-filter: blur(1px);
+  transform: rotate(-1.5deg);
+}
+
+.washi-sage {
+  background-color: rgba(147, 172, 148, 0.88);
+  border-left: 2px dashed rgba(255,255,255,0.4);
+  border-right: 2px dashed rgba(255,255,255,0.4);
+}
+
+.washi-ochre {
+  background-color: rgba(222, 178, 102, 0.88);
+  border-left: 2px dashed rgba(255,255,255,0.4);
+  border-right: 2px dashed rgba(255,255,255,0.4);
+}
+
+.washi-terracotta {
+  background-color: rgba(198, 114, 94, 0.88);
+  border-left: 2px dashed rgba(255,255,255,0.4);
+  border-right: 2px dashed rgba(255,255,255,0.4);
+}
+
+.washi-kraft {
+  background-color: rgba(193, 171, 143, 0.9);
+  border-left: 2px dashed rgba(255,255,255,0.3);
+  border-right: 2px dashed rgba(255,255,255,0.3);
+}
+
+/* Rubber Stamp Styling */
+.rubber-stamp {
+  border: 2.5px solid #A8382A;
+  color: #A8382A;
+  font-family: 'Special Elite', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.25rem 0.6rem;
+  display: inline-block;
+  transform: rotate(-3deg);
+  opacity: 0.88;
+  mask-image: radial-gradient(circle, rgba(0,0,0,1) 80%, rgba(0,0,0,0.6) 100%);
+  user-select: none;
+}
+
+.rubber-stamp-green {
+  border: 2.5px solid #2E6B4E;
+  color: #2E6B4E;
+  font-family: 'Special Elite', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  padding: 0.25rem 0.6rem;
+  display: inline-block;
+  transform: rotate(2deg);
+  opacity: 0.88;
+  user-select: none;
+}
+
+/* Paper torn / deckle edge approximations */
+.torn-bottom {
+  clip-path: polygon(
+    0% 0%, 100% 0%, 
+    100% calc(100% - 6px), 97% 100%, 94% calc(100% - 5px), 91% 100%, 88% calc(100% - 6px),
+    85% 100%, 82% calc(100% - 5px), 79% 100%, 76% calc(100% - 6px), 73% 100%, 70% calc(100% - 5px),
+    67% 100%, 64% calc(100% - 6px), 61% 100%, 58% calc(100% - 5px), 55% 100%, 52% calc(100% - 6px),
+    49% 100%, 46% calc(100% - 5px), 43% 100%, 40% calc(100% - 6px), 37% 100%, 34% calc(100% - 5px),
+    31% 100%, 28% calc(100% - 6px), 25% 100%, 22% calc(100% - 5px), 19% 100%, 16% calc(100% - 6px),
+    13% 100%, 10% calc(100% - 5px), 7% 100%, 4% calc(100% - 6px), 0% 100%
+  );
+}
+
+/* Analog Blue Ballpoint Ink */
+.ballpoint-ink {
+  color: #1A3563;
+  text-shadow: 0 0 0.5px rgba(26, 53, 99, 0.4);
+}
+
+/* Custom Scrollbar for analog paper feel */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+::-webkit-scrollbar-thumb {
+  background: #C4B59E;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A8957C;
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="40" fill="#EB6655"/>
+  <rect x="24" y="24" width="144" height="144" rx="20" fill="#F9F8F3" stroke="#D7CBBA" stroke-width="4"/>
+  <!-- College ruled lines -->
+  <line x1="36" y1="64" x2="156" y2="64" stroke="#E3D7C5" stroke-width="2"/>
+  <line x1="36" y1="88" x2="156" y2="88" stroke="#E3D7C5" stroke-width="2"/>
+  <line x1="36" y1="112" x2="156" y2="112" stroke="#E3D7C5" stroke-width="2"/>
+  <line x1="36" y1="136" x2="156" y2="136" stroke="#E3D7C5" stroke-width="2"/>
+  <!-- Margin line -->
+  <line x1="60" y1="36" x2="60" y2="156" stroke="#EB6655" stroke-width="2" opacity="0.6"/>
+  <!-- Washi tape -->
+  <rect x="68" y="16" width="56" height="18" rx="3" fill="#D9A74A" opacity="0.9" transform="rotate(-3 96 25)"/>
+  <!-- Quill / Pen icon -->
+  <path d="M120 70 L85 105 L80 120 L95 115 L130 80 Z" fill="#1C355E"/>
+</svg>
