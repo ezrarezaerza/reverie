@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <rect width="96" height="96" rx="20" fill="#B5743D"/>
+  <!-- Sparkles / Novelty deck card -->
+  <path d="M48 20 L53 38 L71 43 L53 48 L48 66 L43 48 L25 43 L43 38 Z" fill="#FAF8F2"/>
+  <circle cx="68" cy="24" r="4" fill="#FAF8F2"/>
+</svg>

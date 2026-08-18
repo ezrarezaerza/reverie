@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Sparkles, Calendar, Clock, ArrowRight, History, Compass } from 'lucide-react';
+import { Calendar, Clock, ArrowRight, History, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 import { MemoryEntry } from '../types';
 import { soundEngine } from '../utils/soundEngine';
+import { getLocalDateString, parseLocalDate, shiftDateString, formatDisplayDate } from '../utils/dateUtils';
+import { AnalogDatePicker } from './AnalogDatePicker';
 
 interface OnThisDaySectionProps {
   entries: MemoryEntry[];
@@ -16,35 +18,46 @@ export const OnThisDaySection: React.FC<OnThisDaySectionProps> = ({
   onRevealEntry,
   onSelectDateForJournal,
 }) => {
-  const [customSimulatedMonthDay, setCustomSimulatedMonthDay] = useState<string>('');
+  const todayStr = getLocalDateString(currentDate);
+  const [selectedDateStr, setSelectedDateStr] = useState<string>(todayStr);
 
-  const targetDate = customSimulatedMonthDay 
-    ? new Date(`2026-${customSimulatedMonthDay}T00:00:00`)
-    : currentDate;
+  const targetDateObj = parseLocalDate(selectedDateStr);
+  const targetMonth = targetDateObj.getMonth() + 1; // 1-12
+  const targetDay = targetDateObj.getDate();
+  const selectedYear = targetDateObj.getFullYear();
+  const isViewingToday = selectedDateStr === todayStr;
 
-  const targetMonth = targetDate.getMonth() + 1; // 1-12
-  const targetDay = targetDate.getDate();
-  const currentYear = targetDate.getFullYear();
-
-  // Find all historical entries matching the same month and day in prior years
-  // Also, for demo richness, if no prior year matches, we show the closest same-month memories
+  // Find all historical entries matching the same month and day across different years
   const matchingHistoricalEntries = entries.filter((entry) => {
-    const entryDate = new Date(entry.date + 'T00:00:00');
-    const entryMonth = entryDate.getMonth() + 1;
-    const entryDay = entryDate.getDate();
-    const entryYear = entryDate.getFullYear();
+    const entryDateObj = parseLocalDate(entry.date);
+    const entryMonth = entryDateObj.getMonth() + 1;
+    const entryDay = entryDateObj.getDate();
+    const entryYear = entryDateObj.getFullYear();
 
-    return entryMonth === targetMonth && entryDay === targetDay && entryYear !== currentYear;
+    return entryMonth === targetMonth && entryDay === targetDay && entryYear !== selectedYear;
   });
 
-  // Calculate year difference
+  // Calculate year difference relative to selected year
   const formatYearsAgo = (entryDateStr: string) => {
-    const entryYear = new Date(entryDateStr + 'T00:00:00').getFullYear();
-    const diff = currentYear - entryYear;
+    const entryYear = parseLocalDate(entryDateStr).getFullYear();
+    const diff = selectedYear - entryYear;
     if (diff === 1) return '1 year ago';
     if (diff > 1) return `${diff} years ago`;
-    if (diff < 0) return `Future year (${entryYear})`;
+    if (diff === -1) return '1 year later';
+    if (diff < -1) return `${Math.abs(diff)} years later`;
     return 'Same year';
+  };
+
+  const handleDateShift = (offset: number) => {
+    soundEngine.playPaperTurnSound();
+    setSelectedDateStr(shiftDateString(selectedDateStr, offset));
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.value) {
+      soundEngine.playPaperTurnSound();
+      setSelectedDateStr(e.target.value);
+    }
   };
 
   return (
@@ -59,7 +72,7 @@ export const OnThisDaySection: React.FC<OnThisDaySectionProps> = ({
         </span>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pt-1 border-b border-dashed border-[#D6C7B3] pb-4">
+      <div className="flex flex-col gap-3.5 mb-5 pt-1 border-b border-dashed border-[#D6C7B3] pb-4">
         <div className="space-y-0.5">
           <div className="flex items-center gap-2">
             <History className="w-4 h-4 text-[#A8382A]" />
@@ -72,23 +85,63 @@ export const OnThisDaySection: React.FC<OnThisDaySectionProps> = ({
           </p>
         </div>
 
-        {/* Date Context Indicator */}
-        <div className="flex items-center gap-2 self-start sm:self-auto bg-[#F0E7D6] px-3 py-1 rounded-lg border border-[#D5C6B1]">
-          <Calendar className="w-3.5 h-3.5 text-[#2E6B4E]" />
-          <span className="text-xs font-semibold text-[#42392B]">
-            {targetDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
-          </span>
+        {/* Date Selector with Calendar Picker - Matching Today Page full-width centered layout */}
+        <div className="w-full flex items-center justify-between gap-1 bg-[#FAF7F0] border border-[#DDD3C1] rounded-xl p-1 shadow-xs">
+          <button
+            type="button"
+            onClick={() => handleDateShift(-1)}
+            className="p-1.5 rounded-lg hover:bg-[#EFE7D8] text-[#554E42] transition-colors focus-visible:ring-2 focus-visible:ring-[#2E6B4E] cursor-pointer shrink-0"
+            title="Previous Day"
+            aria-label="Previous Day"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {/* Analog Calendar Popover Picker: Full width, centered, full date label */}
+          <AnalogDatePicker
+            selectedDate={selectedDateStr}
+            onSelectDate={(newDate) => setSelectedDateStr(newDate)}
+            activeDates={entries.map((e) => e.date)}
+            labelFormat="full"
+            showTodayBadge={true}
+            variant="bare"
+            className="flex-1 text-center"
+          />
+
+          <button
+            type="button"
+            onClick={() => handleDateShift(1)}
+            className="p-1.5 rounded-lg hover:bg-[#EFE7D8] text-[#554E42] transition-colors focus-visible:ring-2 focus-visible:ring-[#2E6B4E] cursor-pointer shrink-0"
+            title="Next Day"
+            aria-label="Next Day"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          {!isViewingToday && (
+            <button
+              type="button"
+              onClick={() => {
+                soundEngine.playPaperTurnSound();
+                setSelectedDateStr(todayStr);
+              }}
+              className="text-[11px] font-semibold px-2 py-1 text-[#665D4F] hover:text-[#1E2522] bg-[#EFE7D8] rounded-lg transition-colors cursor-pointer shrink-0 ml-1"
+              title="Reset to Today's date"
+            >
+              Today
+            </button>
+          )}
         </div>
       </div>
 
       {/* Historical Entries Match list */}
       {matchingHistoricalEntries.length > 0 ? (
         <div className="space-y-4">
-          {matchingHistoricalEntries.map((entry) => {
+          {matchingHistoricalEntries.map((entry, idx) => {
             const yearsAgoLabel = formatYearsAgo(entry.date);
             return (
               <div
-                key={entry.id}
+                key={entry.id || `${entry.date}-${idx}`}
                 onClick={() => {
                   soundEngine.playPaperTurnSound();
                   onRevealEntry(entry);
@@ -121,7 +174,7 @@ export const OnThisDaySection: React.FC<OnThisDaySectionProps> = ({
 
                 <button
                   type="button"
-                  className="self-end sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2E6B4E] hover:bg-[#25563E] text-[#FAF7F0] text-xs font-semibold shrink-0 transition-colors"
+                  className="self-end sm:self-center flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#2E6B4E] hover:bg-[#25563E] text-[#FAF7F0] text-xs font-semibold shrink-0 transition-colors cursor-pointer"
                 >
                   <span>Open Folio</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -134,23 +187,22 @@ export const OnThisDaySection: React.FC<OnThisDaySectionProps> = ({
         <div className="bg-[#F5EFE4] border border-dashed border-[#D5C6B1] rounded-xl p-5 text-center">
           <Clock className="w-6 h-6 text-[#8F816E] mx-auto mb-2 opacity-70" />
           <h4 className="font-display font-semibold text-sm text-[#3E362A] mb-1">
-            No past-year records for {targetDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} yet
+            No historical echoes for {formatDisplayDate(selectedDateStr, { month: 'long', day: 'numeric' })} yet
           </h4>
           <p className="text-xs text-[#7A6F5E] max-w-md mx-auto mb-3">
-            As you continue journaling daily, this engine will automatically resurface the sights, scents, and reflections you captured on this exact calendar day in years past.
+            As you continue journaling daily, this engine automatically surfaces the sights, scents, and reflections captured on this exact calendar day across prior years.
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-2 pt-2 border-t border-[#E5DAC8] text-xs">
             <span className="text-[#6D6352] font-medium">Quick Year-Echo Simulation:</span>
             <button
               onClick={() => {
-                // Add a sample 1-year ago memory for today's date if user desires
-                const lastYearStr = `${currentYear - 1}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
+                const lastYearStr = `${selectedYear - 1}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`;
                 onSelectDateForJournal(lastYearStr);
               }}
-              className="text-xs px-3 py-1 bg-[#FAF8F2] border border-[#CFBFAB] text-[#2C2926] hover:bg-[#EFE7D8] rounded-md font-medium transition-colors"
+              className="text-xs px-3 py-1.5 bg-[#FAF8F2] border border-[#CFBFAB] text-[#2C2926] hover:bg-[#EFE7D8] rounded-md font-medium transition-colors cursor-pointer shadow-2xs"
             >
-              Write a Memory for {currentYear - 1}
+              Inscribe Memory for {formatDisplayDate(`${selectedYear - 1}-${String(targetMonth).padStart(2, '0')}-${String(targetDay).padStart(2, '0')}`, { month: 'short', day: 'numeric', year: 'numeric' })}
             </button>
           </div>
         </div>

@@ -44,6 +44,8 @@ export interface MicroNovelty {
   sensoryFocus: SensoryCue[];
   whyItSlowsTime: string;
   iconType: 'eye' | 'compass' | 'cup' | 'feather' | 'sparkle' | 'heart' | 'clock' | 'ear';
+  isCustom?: boolean;
+  createdAt?: string;
 }
 
 export interface UserPreferences {
@@ -57,6 +59,7 @@ export interface UserPreferences {
   ambientSound: 'none' | 'rain' | 'clock' | 'hearth' | 'forest';
   ambientVolume: number;
   isLoggedIn: boolean;
+  hapticFeedbackEnabled?: boolean;
 }
 
 export interface NoveltyLog {

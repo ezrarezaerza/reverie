@@ -4,8 +4,8 @@
   "description": "A private, text-only memory journal and micro-novelty companion to slow down the perception of time.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#EB6655",
-  "theme_color": "#F9F8F3",
+  "background_color": "#242B28",
+  "theme_color": "#FAF6F0",
   "orientation": "portrait-primary",
   "icons": [
     {
@@ -19,6 +19,34 @@
       "sizes": "512x512",
       "type": "image/svg+xml",
       "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Write Evening Entry",
+      "short_name": "Write Entry",
+      "description": "Quickly open your notebook to capture today's memories and sensory details.",
+      "url": "/?action=write_entry",
+      "icons": [
+        {
+          "src": "/assets/shortcut-entry.svg",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Log Micro-Novelty",
+      "short_name": "Micro-Novelty",
+      "description": "Review or mark today's routine-breaking micro-novelty challenge.",
+      "url": "/?action=log_novelty",
+      "icons": [
+        {
+          "src": "/assets/shortcut-novelty.svg",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
     }
   ]
 }

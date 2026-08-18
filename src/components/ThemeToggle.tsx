@@ -55,9 +55,9 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
     <button
       type="button"
       onClick={toggleTheme}
-      className={`group relative inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium transition-all shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-[#2E6B4E] ${
+      className={`group relative inline-flex items-center justify-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-full border text-xs font-medium transition-all shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-[#2E6B4E] cursor-pointer ${
         isDark
-          ? 'bg-[#232926] border-[#38423E] text-[#D3CBC0] hover:bg-[#2B3330]'
+          ? 'bg-[#1F2723] border-[#35433B] text-[#D8D1C5] hover:bg-[#28332D]'
           : 'bg-[#FAF7F0] border-[#DDD3C2] text-[#4A4235] hover:bg-[#F2ECE0]'
       }`}
       aria-label={`Switch to ${isDark ? 'Warm Paper light mode' : 'Quiet Dark night mode'}`}
@@ -65,20 +65,21 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
     >
       <div className="relative flex items-center justify-center">
         {isDark ? (
-          <Moon className="w-3.5 h-3.5 text-[#D9A74A] transition-transform duration-300 group-hover:-rotate-12" />
+          <Moon className="w-4 h-4 text-[#DEAC5D] transition-transform duration-300 group-hover:-rotate-12" />
         ) : (
-          <Sun className="w-3.5 h-3.5 text-[#A8382A] transition-transform duration-300 group-hover:rotate-45" />
+          <Sun className="w-4 h-4 text-[#A8382A] transition-transform duration-300 group-hover:rotate-45" />
         )}
       </div>
 
-      <span className="font-mono text-[11px] uppercase tracking-wider select-none">
+      {/* Text label hidden on mobile, visible on sm: screens and above */}
+      <span className="hidden sm:inline font-mono text-[11px] uppercase tracking-wider select-none font-semibold">
         {isDark ? 'Quiet Dark' : 'Warm Paper'}
       </span>
 
-      {/* Tactile indicator slider */}
+      {/* Tactile indicator dot hidden on mobile */}
       <span
-        className={`w-1.5 h-1.5 rounded-full transition-colors ${
-          isDark ? 'bg-[#D9A74A]' : 'bg-[#2E6B4E]'
+        className={`hidden sm:inline-block w-1.5 h-1.5 rounded-full transition-colors ${
+          isDark ? 'bg-[#DEAC5D]' : 'bg-[#2E6B4E]'
         }`}
       />
     </button>

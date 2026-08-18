@@ -15,6 +15,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Kalam:wght@300;400;700&family=Patrick+Hand&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Special+Elite&display=swap" rel="stylesheet">
+    <!-- Theme initialization -->
+    <script>
+      (function() {
+        try {
+          var savedTheme = localStorage.getItem('reverie_active_theme');
+          var isDark = savedTheme === 'quiet-dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.setAttribute('data-theme', 'quiet-dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.setAttribute('data-theme', 'warm-paper');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body class="bg-[#2D332F] text-[#2C2926] antialiased selection:bg-[#E8DCC4] selection:text-[#1E3A8A] overflow-x-hidden min-h-screen">
     <div id="root"></div>

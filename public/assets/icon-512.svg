@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#2E6B4E"/>
+  <rect x="64" y="64" width="384" height="384" rx="64" fill="#FAF8F2" stroke="#E5DAC8" stroke-width="10"/>
+  <!-- Analog paper spread lines & quill circle -->
+  <path d="M160 180 L352 180" stroke="#1C355E" stroke-width="14" stroke-linecap="round"/>
+  <path d="M160 256 L352 256" stroke="#1C355E" stroke-width="14" stroke-linecap="round"/>
+  <path d="M160 332 L288 332" stroke="#1C355E" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="336" cy="332" r="22" fill="#A8382A"/>
+</svg>

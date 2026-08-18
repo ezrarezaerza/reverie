@@ -9,7 +9,8 @@ import {
   ArrowUpRight,
   LayoutGrid,
   CalendarDays,
-  History
+  History,
+  Shuffle
 } from 'lucide-react';
 import { MemoryEntry, SensoryCue, TimePacing } from '../types';
 import { SENSORY_CUE_METADATA, TIME_PACING_METADATA } from '../data/microNoveltiesCatalog';
@@ -17,6 +18,9 @@ import { soundEngine } from '../utils/soundEngine';
 import { TimelineCalendar } from './TimelineCalendar';
 import { MemoryReveal } from './MemoryReveal';
 import { OnThisDaySection } from './OnThisDaySection';
+import { SerendipityMemoryModal } from './SerendipityMemoryModal';
+import { AnnualBookshelf } from './scrapbook/AnnualBookshelf';
+import { getLocalDateString } from '../utils/dateUtils';
 
 interface ScrapbookArchiveProps {
   entries: MemoryEntry[];
@@ -31,9 +35,11 @@ export const ScrapbookArchive: React.FC<ScrapbookArchiveProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSensoryFilter, setSelectedSensoryFilter] = useState<SensoryCue | 'all'>('all');
   const [selectedPacingFilter, setSelectedPacingFilter] = useState<TimePacing | 'all'>('all');
+  const [selectedYearFilter, setSelectedYearFilter] = useState<number | null>(null);
   const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [viewMode, setViewMode] = useState<'cards' | 'calendar'>('cards');
   const [expandedEntry, setExpandedEntry] = useState<MemoryEntry | null>(null);
+  const [isSerendipityOpen, setIsSerendipityOpen] = useState(false);
   
   // Calendar month state
   const [currentCalendarMonth, setCurrentCalendarMonth] = useState<Date>(new Date());
@@ -53,7 +59,9 @@ export const ScrapbookArchive: React.FC<ScrapbookArchiveProps> = ({
 
     const matchesFav = !onlyFavorites || entry.isFavorite;
 
-    return matchesSearch && matchesSensory && matchesPacing && matchesFav;
+    const matchesYear = !selectedYearFilter || new Date(entry.date).getFullYear() === selectedYearFilter;
+
+    return matchesSearch && matchesSensory && matchesPacing && matchesFav && matchesYear;
   });
 
   const getPacingBadge = (pacing?: TimePacing) => {
@@ -75,7 +83,7 @@ export const ScrapbookArchive: React.FC<ScrapbookArchiveProps> = ({
   const activeDates = entries.map(e => e.date);
 
   const handleCalendarDayClick = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = getLocalDateString(date);
     const existing = entries.find(e => e.date === dateStr);
     if (existing) {
       setExpandedEntry(existing);
@@ -95,137 +103,188 @@ export const ScrapbookArchive: React.FC<ScrapbookArchiveProps> = ({
         onSelectDateForJournal={onSelectDateForJournal}
       />
 
-      {/* Header & Search / Filter Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div>
-          <h2 className="font-display font-bold text-2xl text-[#FAF7F0] flex items-center gap-2">
-            <span>The Memory Scrapbook</span>
-            <span className="text-xs font-sans font-normal px-2.5 py-0.5 rounded-full bg-[#3D4540] text-[#D1C7B7]">
-              {filteredEntries.length} inscribed
+      {/* Skeuomorphic Annual Bookshelf */}
+      <AnnualBookshelf
+        entries={entries}
+        selectedYearFilter={selectedYearFilter}
+        onSelectYearVolume={(year, earliestDate) => {
+          setSelectedYearFilter(prev => (prev === year ? null : year));
+          onSelectDateForJournal(earliestDate);
+        }}
+        onClearYearFilter={() => setSelectedYearFilter(null)}
+      />
+
+      {/* Header Zone */}
+      <div className="mb-4 sm:mb-5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <h2 className="font-display font-bold text-xl sm:text-2xl text-[#FAF7F0]">
+              The Memory Scrapbook
+            </h2>
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#344039] text-[#D8CEBE] font-semibold">
+              {filteredEntries.length} {filteredEntries.length === 1 ? 'entry' : 'entries'}
             </span>
-          </h2>
-          <p className="text-xs text-[#C2B8A6]">
-            Every mundane detail captured here resists the brain's temporal compression.
-          </p>
-        </div>
-
-        {/* View mode toggle & Search */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* View mode toggle: Cards vs Calendar */}
-          <div className="flex items-center bg-[#FAF6EE] border border-[#DDD0BC] p-0.5 rounded-lg shadow-xs">
-            <button
-              onClick={() => {
-                setViewMode('cards');
-                soundEngine.playPaperTurnSound();
-              }}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
-                viewMode === 'cards'
-                  ? 'bg-[#2E6B4E] text-[#FAF7F0] font-semibold'
-                  : 'text-[#695F50] hover:text-[#2C2926]'
-              }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Cards</span>
-            </button>
-            <button
-              onClick={() => {
-                setViewMode('calendar');
-                soundEngine.playPaperTurnSound();
-              }}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${
-                viewMode === 'calendar'
-                  ? 'bg-[#2E6B4E] text-[#FAF7F0] font-semibold'
-                  : 'text-[#695F50] hover:text-[#2C2926]'
-              }`}
-            >
-              <CalendarDays className="w-3.5 h-3.5" />
-              <span>Timeline</span>
-            </button>
           </div>
+        </div>
+        <p className="text-xs text-[#A89E8F] mt-0.5">
+          Every mundane detail captured here resists the brain's temporal compression.
+        </p>
+      </div>
 
-          <div className="relative w-full sm:w-56">
+      {/* Controls Bar: Responsive Grid/Flex for Mobile & Desktop */}
+      <div className="bg-[#FAF7F1] border border-[#DDD3C2] p-2.5 sm:p-3.5 rounded-xl mb-4 sm:mb-6 shadow-xs space-y-2.5">
+        
+        {/* Row 1: Search and Main Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          
+          {/* Search Input */}
+          <div className="relative flex-1">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#8F8474]" />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search memories, places..."
-              className="w-full pl-8 pr-3 py-1.5 bg-[#FAF6EE] border border-[#DDD0BC] rounded-lg text-xs text-[#2C2926] placeholder-[#8F8474] outline-none focus:ring-1 focus:ring-[#2E6B4E]"
+              placeholder="Search memories, places, senses..."
+              className="w-full pl-8 pr-3 py-1.5 bg-[#FFFFFF] border border-[#DDD0BC] rounded-lg text-xs text-[#2C2926] placeholder-[#8F8474] outline-none focus:ring-1 focus:ring-[#2E6B4E]"
             />
           </div>
 
-          <button
-            onClick={() => setOnlyFavorites(!onlyFavorites)}
-            className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-              onlyFavorites
-                ? 'bg-[#A8382A] text-[#FAF7F0] border-[#8A2C20]'
-                : 'bg-[#FAF6EE] text-[#554D40] border-[#DDD0BC] hover:bg-[#EFE7D8]'
-            }`}
-          >
-            <Heart className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-current' : ''}`} />
-            <span>Favorites</span>
-          </button>
-        </div>
-      </div>
+          {/* Action Row: Cards/Timeline, Random, Favorites */}
+          <div className="flex items-center gap-1.5 justify-between sm:justify-start">
+            {/* View Mode Toggle: Cards vs Timeline */}
+            <div className="flex items-center bg-[#EDE4D4] p-0.5 rounded-lg border border-[#DCD0BC]">
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode('cards');
+                  soundEngine.playPaperTurnSound();
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'cards'
+                    ? 'bg-[#2E6B4E] text-[#FAF7F0] shadow-xs'
+                    : 'text-[#695F50] hover:text-[#2C2926]'
+                }`}
+                title="View memory cards"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Cards</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode('calendar');
+                  soundEngine.playPaperTurnSound();
+                }}
+                className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'calendar'
+                    ? 'bg-[#2E6B4E] text-[#FAF7F0] shadow-xs'
+                    : 'text-[#695F50] hover:text-[#2C2926]'
+                }`}
+                title="View timeline calendar"
+              >
+                <CalendarDays className="w-3.5 h-3.5" />
+                <span>Timeline</span>
+              </button>
+            </div>
 
-      {/* Filter Row: Sensory cues and Time Pacing */}
-      <div className="bg-[#FAF7F1] border border-[#DDD3C2] p-3 rounded-xl mb-6 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
-        
-        {/* Sensory Cues */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          <span className="text-[11px] font-bold text-[#6D6352] uppercase tracking-wider shrink-0 mr-1">
-            Sense:
-          </span>
-          <button
-            onClick={() => setSelectedSensoryFilter('all')}
-            className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-              selectedSensoryFilter === 'all'
-                ? 'bg-[#2E6B4E] text-[#FAF7F0] font-semibold'
-                : 'bg-[#EDE4D4] text-[#554E41] hover:bg-[#E0D5C3]'
-            }`}
-          >
-            All
-          </button>
-          {(Object.keys(SENSORY_CUE_METADATA) as SensoryCue[]).map(cue => (
+            {/* Random Memory Trigger Button */}
             <button
-              key={cue}
+              type="button"
               onClick={() => {
-                setSelectedSensoryFilter(selectedSensoryFilter === cue ? 'all' : cue);
+                soundEngine.playPaperTurnSound();
+                setIsSerendipityOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#FFFFFF] text-[#554D40] hover:text-[#1C355E] border border-[#DDD0BC] hover:bg-[#EFE7D8] transition-colors cursor-pointer shadow-2xs"
+              title="Let the pages flutter open to an unpredictable past memory"
+            >
+              <Shuffle className="w-3.5 h-3.5 text-[#D9A74A]" />
+              <span>Random</span>
+            </button>
+
+            {/* Favorites Filter Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setOnlyFavorites(!onlyFavorites);
                 soundEngine.playPencilScratchSound();
               }}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-medium whitespace-nowrap transition-all flex items-center gap-1 ${
-                selectedSensoryFilter === cue
-                  ? 'bg-[#1C355E] text-[#FAF7F0] font-semibold'
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer shadow-2xs ${
+                onlyFavorites
+                  ? 'bg-[#A8382A] text-[#FAF7F0] border-[#8A2C20]'
+                  : 'bg-[#FFFFFF] text-[#554D40] border-[#DDD0BC] hover:bg-[#EFE7D8]'
+              }`}
+              title="Filter favorite memories"
+            >
+              <Heart className={`w-3.5 h-3.5 ${onlyFavorites ? 'fill-current' : ''}`} />
+              <span className="hidden xs:inline">Favorites</span>
+            </button>
+          </div>
+
+        </div>
+
+        {/* Row 2: Sensory Coordinates & Time Pacing Filters */}
+        <div className="pt-2 border-t border-[#E5DAC7] space-y-2 text-xs">
+          
+          {/* Sense Filters */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <span className="text-[10px] font-mono font-bold text-[#7A6F5E] uppercase tracking-wider shrink-0 mr-1">
+              Sense:
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedSensoryFilter('all')}
+              className={`px-2 py-1 rounded-md text-[11px] font-semibold transition-all cursor-pointer shrink-0 ${
+                selectedSensoryFilter === 'all'
+                  ? 'bg-[#2E6B4E] text-[#FAF7F0]'
                   : 'bg-[#EDE4D4] text-[#554E41] hover:bg-[#E0D5C3]'
               }`}
             >
-              <span>{SENSORY_CUE_METADATA[cue].icon}</span>
-              <span>{cue}</span>
+              All
             </button>
-          ))}
-        </div>
+            {(Object.keys(SENSORY_CUE_METADATA) as SensoryCue[]).map(cue => (
+              <button
+                key={cue}
+                type="button"
+                onClick={() => {
+                  setSelectedSensoryFilter(selectedSensoryFilter === cue ? 'all' : cue);
+                  soundEngine.playPencilScratchSound();
+                }}
+                className={`px-2 py-1 rounded-md text-[11px] font-semibold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer shrink-0 ${
+                  selectedSensoryFilter === cue
+                    ? 'bg-[#1C355E] text-[#FAF7F0]'
+                    : 'bg-[#EDE4D4] text-[#554E41] hover:bg-[#E0D5C3]'
+                }`}
+              >
+                <span>{SENSORY_CUE_METADATA[cue].icon}</span>
+                <span>{cue}</span>
+              </button>
+            ))}
+          </div>
 
-        {/* Time pacing filter */}
-        <div className="flex items-center gap-1.5 ml-auto">
-          <span className="text-[11px] font-bold text-[#6D6352] uppercase tracking-wider shrink-0">
-            Pacing:
-          </span>
-          {(['all', 'slow', 'flow', 'fleeting', 'stillness'] as const).map(p => (
-            <button
-              key={p}
-              onClick={() => {
-                setSelectedPacingFilter(p);
-                soundEngine.playPencilScratchSound();
-              }}
-              className={`px-2 py-1 rounded-md text-[11px] capitalize font-medium transition-all ${
-                selectedPacingFilter === p
-                  ? 'bg-[#A8382A] text-[#FAF7F0] font-semibold'
-                  : 'bg-[#EDE4D4] text-[#554E41] hover:bg-[#E0D5C3]'
-              }`}
-            >
-              {p}
-            </button>
-          ))}
+          {/* Pacing Filters */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <span className="text-[10px] font-mono font-bold text-[#7A6F5E] uppercase tracking-wider shrink-0 mr-1">
+              Pacing:
+            </span>
+            {(['all', 'slow', 'flow', 'fleeting', 'stillness'] as const).map(p => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => {
+                  setSelectedPacingFilter(p);
+                  soundEngine.playPencilScratchSound();
+                }}
+                className={`px-2 py-1 rounded-md text-[11px] capitalize font-semibold transition-all cursor-pointer shrink-0 ${
+                  selectedPacingFilter === p
+                    ? 'bg-[#A8382A] text-[#FAF7F0]'
+                    : 'bg-[#EDE4D4] text-[#554E41] hover:bg-[#E0D5C3]'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
         </div>
 
       </div>
@@ -268,7 +327,7 @@ export const ScrapbookArchive: React.FC<ScrapbookArchiveProps> = ({
 
             return (
               <div
-                key={entry.id}
+                key={entry.id || `${entry.date}-${idx}`}
                 onClick={() => {
                   soundEngine.playPaperTurnSound();
                   setExpandedEntry(entry);
@@ -279,6 +338,14 @@ export const ScrapbookArchive: React.FC<ScrapbookArchiveProps> = ({
                 <div className={`washi-tape ${getWashiColor(idx)} absolute -top-2.5 left-6 w-20 h-5 flex items-center justify-center text-[9px] font-mono text-[#332A1F] font-bold`}>
                   MEMOIR
                 </div>
+
+                {/* Vintage Silk Ribbon Bookmark (if favorite) */}
+                {entry.isFavorite && (
+                  <div 
+                    className="vintage-ribbon vintage-ribbon-terracotta absolute -top-2.5 right-6 w-5 h-8 z-10 pointer-events-none shadow-xs"
+                    title="Bookmarked Memory"
+                  />
+                )}
 
                 <div>
                   {/* Date & Favorite */}
@@ -293,10 +360,12 @@ export const ScrapbookArchive: React.FC<ScrapbookArchiveProps> = ({
                     )}
                   </div>
 
-                  {/* Title in handwriting or retro display */}
-                  <h3 className="font-display font-bold text-lg text-[#292623] mb-2 group-hover:text-[#A8382A] transition-colors leading-snug">
-                    {entry.title}
-                  </h3>
+                  {/* Title in handwriting or retro display (if present) */}
+                  {entry.title ? (
+                    <h3 className="font-display font-bold text-lg text-[#292623] mb-2 group-hover:text-[#A8382A] transition-colors leading-snug">
+                      {entry.title}
+                    </h3>
+                  ) : null}
 
                   {/* Handwritten memory snippet */}
                   <p className="font-hand text-lg sm:text-xl text-[#1E3A8A] leading-relaxed line-clamp-4 mb-4">
@@ -315,8 +384,8 @@ export const ScrapbookArchive: React.FC<ScrapbookArchiveProps> = ({
 
                   <div className="flex items-center justify-between pt-2 border-t border-[#E8DFCFA]">
                     <div className="flex items-center gap-1">
-                      {entry.sensoryCues?.slice(0, 3).map(cue => (
-                        <span key={cue} className="text-xs" title={cue}>
+                      {entry.sensoryCues?.slice(0, 3).map((cue, cIdx) => (
+                        <span key={`${cue}-${cIdx}`} className="text-xs" title={cue}>
                           {SENSORY_CUE_METADATA[cue]?.icon}
                         </span>
                       ))}
@@ -340,6 +409,17 @@ export const ScrapbookArchive: React.FC<ScrapbookArchiveProps> = ({
         onEditInNotebook={(date) => {
           onSelectDateForJournal(date);
           setExpandedEntry(null);
+        }}
+      />
+
+      {/* Serendipity Random Memory Engine Modal */}
+      <SerendipityMemoryModal
+        isOpen={isSerendipityOpen}
+        onClose={() => setIsSerendipityOpen(false)}
+        entries={entries}
+        onSelectDate={(date) => {
+          onSelectDateForJournal(date);
+          setIsSerendipityOpen(false);
         }}
       />
 

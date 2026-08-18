@@ -12,8 +12,22 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   });
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+const mount = () => {
+  let rootEl = document.getElementById('root');
+  if (!rootEl) {
+    rootEl = document.createElement('div');
+    rootEl.id = 'root';
+    document.body.appendChild(rootEl);
+  }
+  createRoot(rootEl).render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mount);
+} else {
+  mount();
+}

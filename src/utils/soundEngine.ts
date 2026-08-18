@@ -1,6 +1,6 @@
 /**
- * Pure Web Audio API Synthesizer for tactile background ambience & paper page sounds.
- * Completely offline, zero external media files required.
+ * Tactile sound engine supporting real ambient audio tracks (e.g. Soothing Rain Sound.mp3)
+ * with graceful fallback to Web Audio API synthesis and tactile paper SFX.
  */
 
 class SoundEngine {
@@ -9,10 +9,13 @@ class SoundEngine {
   private currentType: string = 'none';
   private masterGain: GainNode | null = null;
   private volume: number = 0.5;
+  private audioPlayer: HTMLAudioElement | null = null;
 
   private initContext() {
     if (!this.ctx) {
-      const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.ctx = new AudioContextClass();
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
@@ -28,17 +31,28 @@ class SoundEngine {
     if (this.masterGain && this.ctx) {
       this.masterGain.gain.setValueAtTime(this.volume, this.ctx.currentTime);
     }
+    if (this.audioPlayer) {
+      this.audioPlayer.volume = this.volume;
+    }
   }
 
   public stop() {
-    this.currentSourceNodes.forEach(node => {
+    // Stop and clean up audio element
+    if (this.audioPlayer) {
+      this.audioPlayer.pause();
+      this.audioPlayer.currentTime = 0;
+      this.audioPlayer = null;
+    }
+
+    // Stop Web Audio nodes
+    this.currentSourceNodes.forEach((node) => {
       try {
         if ('stop' in node && typeof (node as AudioScheduledSourceNode).stop === 'function') {
           (node as AudioScheduledSourceNode).stop();
         }
         node.disconnect();
       } catch {
-        // node already stopped or disconnected
+        // already stopped or disconnected
       }
     });
     this.currentSourceNodes = [];
@@ -49,14 +63,14 @@ class SoundEngine {
     this.initContext();
     this.stop();
 
-    if (type === 'none' || !this.ctx || !this.masterGain) {
+    if (type === 'none') {
       return;
     }
 
     this.currentType = type;
 
     if (type === 'rain') {
-      this.createRainAmbience();
+      this.playRainFileAmbience();
     } else if (type === 'clock') {
       this.createClockTickAmbience();
     } else if (type === 'hearth') {
@@ -66,7 +80,30 @@ class SoundEngine {
     }
   }
 
-  private createRainAmbience() {
+  /**
+   * Plays the uploaded soothing rain audio file on infinite loop.
+   * Gracefully falls back to synthesized rain noise if loading fails.
+   */
+  private playRainFileAmbience() {
+    try {
+      const audio = new Audio('/Soothing Rain Sound.mp3');
+      audio.loop = true;
+      audio.volume = this.volume;
+      this.audioPlayer = audio;
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.warn('Audio element play failed, falling back to Web Audio synth:', error);
+          this.createSynthRainAmbience();
+        });
+      }
+    } catch {
+      this.createSynthRainAmbience();
+    }
+  }
+
+  private createSynthRainAmbience() {
     if (!this.ctx || !this.masterGain) return;
 
     const bufferSize = this.ctx.sampleRate * 2;
@@ -142,7 +179,6 @@ class SoundEngine {
   private createHearthAmbience() {
     if (!this.ctx || !this.masterGain) return;
 
-    // Brown noise for hearth base
     const bufferSize = this.ctx.sampleRate * 2;
     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -150,7 +186,7 @@ class SoundEngine {
 
     for (let i = 0; i < bufferSize; i++) {
       const white = Math.random() * 2 - 1;
-      output[i] = (lastOut + (0.02 * white)) / 1.02;
+      output[i] = (lastOut + 0.02 * white) / 1.02;
       lastOut = output[i];
       output[i] *= 0.5;
     }
@@ -177,7 +213,6 @@ class SoundEngine {
   private createForestAmbience() {
     if (!this.ctx || !this.masterGain) return;
 
-    // Soft wind through pines
     const bufferSize = this.ctx.sampleRate * 3;
     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const output = noiseBuffer.getChannelData(0);
@@ -235,7 +270,6 @@ class SoundEngine {
     this.initContext();
     if (!this.ctx) return;
 
-    // Short tactile pencil/pen ink click
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
 
@@ -251,6 +285,27 @@ class SoundEngine {
 
     osc.start();
     osc.stop(this.ctx.currentTime + 0.05);
+  }
+
+  public playStampSound() {
+    this.initContext();
+    if (!this.ctx) return;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(45, this.ctx.currentTime + 0.09);
+
+    gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start();
+    osc.stop(this.ctx.currentTime + 0.1);
   }
 }
 

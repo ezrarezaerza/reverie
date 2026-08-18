@@ -1,9 +1,13 @@
 // Service Worker for Reverie PWA (Offline Caching & Push Nudges)
-const CACHE_NAME = 'reverie-cache-v1';
+const CACHE_NAME = 'reverie-cache-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/manifest.json'
+  '/manifest.json',
+  '/assets/icon-192.svg',
+  '/assets/icon-512.svg',
+  '/assets/shortcut-entry.svg',
+  '/assets/shortcut-novelty.svg'
 ];
 
 self.addEventListener('install', (event) => {

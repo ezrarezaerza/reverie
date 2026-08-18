@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="42" fill="#2E6B4E"/>
+  <rect x="24" y="24" width="144" height="144" rx="24" fill="#FAF8F2" stroke="#E5DAC8" stroke-width="4"/>
+  <!-- Feather quill / book lines icon in analog ink -->
+  <path d="M60 70 L132 70" stroke="#1C355E" stroke-width="5" stroke-linecap="round"/>
+  <path d="M60 96 L132 96" stroke="#1C355E" stroke-width="5" stroke-linecap="round"/>
+  <path d="M60 122 L108 122" stroke="#1C355E" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="126" cy="122" r="8" fill="#A8382A"/>
+</svg>

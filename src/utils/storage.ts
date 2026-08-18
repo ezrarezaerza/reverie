@@ -1,10 +1,12 @@
-import { MemoryEntry, UserPreferences, NoveltyLog } from '../types';
+import { MemoryEntry, UserPreferences, NoveltyLog, MicroNovelty } from '../types';
+import { getLocalDateString } from './dateUtils';
 
 const STORAGE_KEYS = {
   ENTRIES: 'reverie_memories_v1',
   PREFS: 'reverie_prefs_v1',
   NOVELTY_LOGS: 'reverie_novelty_logs_v1',
-  ACTIVE_NOVELTY: 'reverie_active_novelty_v1'
+  ACTIVE_NOVELTY: 'reverie_active_novelty_v1',
+  CUSTOM_NOVELTIES: 'reverie_custom_novelties_v1'
 };
 
 const DEFAULT_PREFERENCES: UserPreferences = {
@@ -17,7 +19,8 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   enableNudges: true,
   ambientSound: 'none',
   ambientVolume: 0.45,
-  isLoggedIn: true
+  isLoggedIn: true,
+  hapticFeedbackEnabled: true
 };
 
 const INITIAL_SAMPLE_ENTRIES: MemoryEntry[] = [
@@ -188,13 +191,26 @@ export const memoryStorage = {
     }
   },
 
-  logNoveltyCompleted(noveltyId: string, notes?: string): NoveltyLog[] {
+  toggleNoveltyCompleted(noveltyId: string, dateStr?: string, notes?: string): NoveltyLog[] {
     const logs = this.getNoveltyLogs();
-    const today = new Date().toISOString().split('T')[0];
-    const newLog: NoveltyLog = { noveltyId, completedAt: today, notes };
-    const updated = [newLog, ...logs.filter(l => !(l.noveltyId === noveltyId && l.completedAt === today))];
+    const targetDate = dateStr || getLocalDateString();
+    const exists = logs.some(l => l.noveltyId === noveltyId && l.completedAt === targetDate);
+
+    let updated: NoveltyLog[];
+    if (exists) {
+      // Uncheck / remove log for target date
+      updated = logs.filter(l => !(l.noveltyId === noveltyId && l.completedAt === targetDate));
+    } else {
+      // Add log for target date
+      const newLog: NoveltyLog = { noveltyId, completedAt: targetDate, notes };
+      updated = [newLog, ...logs];
+    }
     localStorage.setItem(STORAGE_KEYS.NOVELTY_LOGS, JSON.stringify(updated));
     return updated;
+  },
+
+  logNoveltyCompleted(noveltyId: string, notes?: string): NoveltyLog[] {
+    return this.toggleNoveltyCompleted(noveltyId, undefined, notes);
   },
 
   getActiveNoveltyId(): string {
@@ -206,13 +222,47 @@ export const memoryStorage = {
     localStorage.setItem(STORAGE_KEYS.ACTIVE_NOVELTY, id);
   },
 
+  getCustomNovelties(): MicroNovelty[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.CUSTOM_NOVELTIES);
+      if (!data) return [];
+      return JSON.parse(data);
+    } catch {
+      return [];
+    }
+  },
+
+  saveCustomNovelty(novelty: MicroNovelty): MicroNovelty[] {
+    const customList = this.getCustomNovelties();
+    const existingIndex = customList.findIndex(n => n.id === novelty.id);
+
+    let updated: MicroNovelty[];
+    if (existingIndex >= 0) {
+      updated = [...customList];
+      updated[existingIndex] = { ...novelty, isCustom: true };
+    } else {
+      updated = [{ ...novelty, isCustom: true, createdAt: novelty.createdAt || new Date().toISOString() }, ...customList];
+    }
+
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_NOVELTIES, JSON.stringify(updated));
+    return updated;
+  },
+
+  deleteCustomNovelty(id: string): MicroNovelty[] {
+    const customList = this.getCustomNovelties();
+    const updated = customList.filter(n => n.id !== id);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_NOVELTIES, JSON.stringify(updated));
+    return updated;
+  },
+
   exportAllDataAsJSON(): string {
     const data = {
       version: '1.0.0',
       exportedAt: new Date().toISOString(),
       user: this.getPreferences(),
       entries: this.getEntries(),
-      noveltyLogs: this.getNoveltyLogs()
+      noveltyLogs: this.getNoveltyLogs(),
+      customNovelties: this.getCustomNovelties()
     };
     return JSON.stringify(data, null, 2);
   },
@@ -228,6 +278,9 @@ export const memoryStorage = {
       }
       if (Array.isArray(parsed.noveltyLogs)) {
         localStorage.setItem(STORAGE_KEYS.NOVELTY_LOGS, JSON.stringify(parsed.noveltyLogs));
+      }
+      if (Array.isArray(parsed.customNovelties)) {
+        localStorage.setItem(STORAGE_KEYS.CUSTOM_NOVELTIES, JSON.stringify(parsed.customNovelties));
       }
       return true;
     } catch {
